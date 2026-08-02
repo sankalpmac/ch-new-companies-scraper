@@ -6,24 +6,37 @@ import { parse } from 'csv-parse';
 await Actor.init();
 
 const input = (await Actor.getInput()) || {};
+
+// Normalizes list-type inputs: splits any comma-packed strings, trims whitespace, drops empties.
+function normalizeList(value) {
+  if (!value) return [];
+  const arr = Array.isArray(value) ? value : [value];
+  return arr
+    .flatMap((item) => String(item).split(','))
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+}
+
 const {
   snapshotMonth = 'latest',
   incorporatedSince = '',
   incorporatedBefore = '',
-  companyStatuses = ['Active'],
-  sicCodePrefixes = [],
-  sicKeywords = [],
-  postTowns = [],
-  postCodePrefixes = [],
-  counties = [],
-  countries = [],
-  companyCategories = [],
-  nameContains = '',
   maxResults = 500,
   logEveryNRows = 100000,
   enrichWithOfficers = true,
   enrichWithPhone = true,
+  nameContains: nameContainsRaw = '',
 } = input;
+
+const companyStatuses = normalizeList(input.companyStatuses).map((s) => s.toUpperCase());
+const sicCodePrefixes = normalizeList(input.sicCodePrefixes);
+const sicKeywords = normalizeList(input.sicKeywords);
+const postTowns = normalizeList(input.postTowns).map((s) => s.toUpperCase());
+const postCodePrefixes = normalizeList(input.postCodePrefixes).map((s) => s.toUpperCase());
+const counties = normalizeList(input.counties).map((s) => s.toUpperCase());
+const countries = normalizeList(input.countries).map((s) => s.toUpperCase());
+const companyCategories = normalizeList(input.companyCategories).map((s) => s.toUpperCase());
+const nameContains = String(nameContainsRaw || '').trim().toUpperCase();
 
 const CH_API_KEY = process.env.CH_API_KEY;
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
@@ -35,6 +48,10 @@ log.info(`   SIC keywords         : ${sicKeywords.join(', ') || '(any)'}`);
 log.info(`   Name contains        : ${nameContains || '(any)'}`);
 log.info(`   Statuses             : ${companyStatuses.join(', ') || '(any)'}`);
 log.info(`   Post towns           : ${postTowns.join(', ') || '(any)'}`);
+log.info(`   Postcode prefixes    : ${postCodePrefixes.join(', ') || '(any)'}`);
+log.info(`   Counties             : ${counties.join(', ') || '(any)'}`);
+log.info(`   Countries            : ${countries.join(', ') || '(any)'}`);
+log.info(`   Company categories   : ${companyCategories.join(', ') || '(any)'}`);
 log.info(`   Incorporated since   : ${incorporatedSince || '(any)'}`);
 log.info(`   Incorporated before  : ${incorporatedBefore || '(any)'}`);
 log.info(`   Max results          : ${maxResults}`);
@@ -94,14 +111,14 @@ async function findSnapshot(requestedMonth) {
 // 2. Row filtering logic
 // ---------------------------------------------------------------------------
 function matchesFilters(row) {
-  const status = row['CompanyStatus'] || '';
+  const status = (row['CompanyStatus'] || '').toUpperCase();
   const incDate = row['IncorporationDate'] || '';
-  const town = row['RegAddress.PostTown'] || '';
-  const postcode = row['RegAddress.PostCode'] || '';
-  const county = row['RegAddress.County'] || '';
-  const country = row['RegAddress.Country'] || row['CountryOfOrigin'] || '';
-  const category = row['CompanyCategory'] || '';
-  const name = row['CompanyName'] || '';
+  const town = (row['RegAddress.PostTown'] || '').toUpperCase();
+  const postcode = (row['RegAddress.PostCode'] || '').toUpperCase();
+  const county = (row['RegAddress.County'] || '').toUpperCase();
+  const country = (row['RegAddress.Country'] || row['CountryOfOrigin'] || '').toUpperCase();
+  const category = (row['CompanyCategory'] || '').toUpperCase();
+  const name = (row['CompanyName'] || '').toUpperCase();
 
   const sicText = [
     row['SICCode.SicText_1'],
@@ -117,19 +134,17 @@ function matchesFilters(row) {
   if (incorporatedSince && incDate && incDate < incorporatedSince) return false;
   if (incorporatedBefore && incDate && incDate > incorporatedBefore) return false;
 
-  if (postTowns.length && !postTowns.some((t) => town.toUpperCase() === t.toUpperCase())) return false;
+  if (postTowns.length && !postTowns.includes(town)) return false;
 
-  if (postCodePrefixes.length && !postCodePrefixes.some((p) => postcode.toUpperCase().startsWith(p.toUpperCase())))
-    return false;
+  if (postCodePrefixes.length && !postCodePrefixes.some((p) => postcode.startsWith(p))) return false;
 
-  if (counties.length && !counties.some((c) => county.toUpperCase() === c.toUpperCase())) return false;
+  if (counties.length && !counties.includes(county)) return false;
 
-  if (countries.length && country && !countries.some((c) => country.toUpperCase() === c.toUpperCase())) return false;
+  if (countries.length && country && !countries.includes(country)) return false;
 
-  if (companyCategories.length && !companyCategories.some((c) => category.toUpperCase() === c.toUpperCase()))
-    return false;
+  if (companyCategories.length && !companyCategories.includes(category)) return false;
 
-  if (nameContains && !name.toUpperCase().includes(nameContains.toUpperCase())) return false;
+  if (nameContains && !name.includes(nameContains)) return false;
 
   if (sicCodePrefixes.length) {
     const sicCodes = [
