@@ -1,0 +1,108 @@
+{
+  "title": "CH New Companies Scraper Input",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "snapshotMonth": {
+      "title": "Snapshot month",
+      "type": "string",
+      "editor": "textfield",
+      "default": "latest",
+      "description": "Format YYYY-MM, or 'latest' to auto-detect the current Companies House snapshot (recommended, since old snapshots are removed monthly)."
+    },
+    "incorporatedSince": {
+      "title": "Incorporated since",
+      "type": "string",
+      "editor": "datepicker",
+      "description": "Only include companies incorporated on/after this date (YYYY-MM-DD)."
+    },
+    "incorporatedBefore": {
+      "title": "Incorporated before",
+      "type": "string",
+      "editor": "datepicker",
+      "description": "Only include companies incorporated on/before this date (YYYY-MM-DD)."
+    },
+    "companyStatuses": {
+      "title": "Company status",
+      "type": "array",
+      "editor": "stringList",
+      "default": ["Active"],
+      "description": "e.g. Active, Dissolved, Liquidation"
+    },
+    "sicCodePrefixes": {
+      "title": "SIC code prefixes",
+      "type": "array",
+      "editor": "stringList",
+      "description": "Match if the company's SIC code starts with any of these, e.g. 56101"
+    },
+    "sicKeywords": {
+      "title": "SIC keyword match",
+      "type": "array",
+      "editor": "stringList",
+      "description": "Match if the company's SIC description text contains any of these words, e.g. Restaurant"
+    },
+    "postTowns": {
+      "title": "Post towns",
+      "type": "array",
+      "editor": "stringList",
+      "description": "e.g. London"
+    },
+    "postCodePrefixes": {
+      "title": "Postcode prefixes",
+      "type": "array",
+      "editor": "stringList",
+      "description": "e.g. SW1, EC1"
+    },
+    "counties": {
+      "title": "Counties",
+      "type": "array",
+      "editor": "stringList",
+      "description": "e.g. Greater London"
+    },
+    "countries": {
+      "title": "Countries",
+      "type": "array",
+      "editor": "stringList",
+      "default": ["ENGLAND", "UNITED KINGDOM", "GREAT BRITAIN"],
+      "description": "e.g. ENGLAND, UNITED KINGDOM, GREAT BRITAIN"
+    },
+    "companyCategories": {
+      "title": "Company categories",
+      "type": "array",
+      "editor": "stringList",
+      "description": "e.g. Private Limited Company"
+    },
+    "nameContains": {
+      "title": "Name contains",
+      "type": "string",
+      "editor": "textfield",
+      "default": "",
+      "description": "Only include companies whose name contains this text (case-insensitive)."
+    },
+    "maxResults": {
+      "title": "Max results",
+      "type": "integer",
+      "default": 500,
+      "description": "Stop once this many matching companies have been found."
+    },
+    "logEveryNRows": {
+      "title": "Log progress every N rows",
+      "type": "integer",
+      "default": 100000,
+      "description": "How often to log progress while scanning the snapshot, in number of rows."
+    },
+    "enrichWithOfficers": {
+      "title": "Enrich with officer and PSC names",
+      "type": "boolean",
+      "default": true,
+      "description": "If true, fetches director/officer names and persons with significant control (beneficial owners) for each matched company via the Companies House API. Requires CH_API_KEY environment variable to be set."
+    },
+    "enrichWithPhone": {
+      "title": "Enrich with phone number (Google Places)",
+      "type": "boolean",
+      "default": true,
+      "description": "If true, looks up each matched company on Google Places by name and post town, and attaches phone number and website if found. Requires GOOGLE_PLACES_API_KEY environment variable to be set. Coverage varies, not every small business has a Google listing."
+    }
+  },
+  "required": []
+}
