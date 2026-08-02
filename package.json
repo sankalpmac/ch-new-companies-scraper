@@ -1,0 +1,16 @@
+{
+  "name": "ch-new-companies-scraper",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Scrapes UK Companies House bulk data for new companies matching filters, enriched with officer/PSC names and Google Places phone/website",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "node src/main.js"
+  },
+  "dependencies": {
+    "apify": "^3.7.2",
+    "got": "^13.0.0",
+    "csv-parse": "^5.5.0",
+    "unzipper": "^0.10.14"
+  }
+}
