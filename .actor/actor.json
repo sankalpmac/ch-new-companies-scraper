@@ -1,0 +1,9 @@
+{
+    "actorSpecification": 1,
+    "name": "ch-new-companies-scraper",
+    "title": "UK Companies House New Companies Scraper",
+    "description": "Downloads the Companies House free bulk data snapshot and filters it for new companies matching SIC codes, location, and incorporation date criteria. Enriches results with officer/PSC names from Companies House API and phone/website from Google Places.",
+    "version": "1.0",
+    "input": "./input_schema.json",
+    "dockerfile": "./Dockerfile"
+}
